@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -16,7 +17,7 @@ class UserController extends Controller
         return response()->json(['user' => $user]);
     }
 
-    public static function register(request $request)
+    public static function register(Request $request)
     { // REQUEST ES LO QUE SE ENVIA ATRAVEZ DEL ENDPOINT 
 
         $validate = $request->validate([ //REALIZA LA VALIDACIÓN DE LOS CAMPOS
@@ -40,4 +41,18 @@ class UserController extends Controller
 
         return response()->json(['message'=>'Usuario creado correctamente','usuario'=>$user,'token_app'=>$token],200);
     }
+
+   public static function login(Request $request){//DECLARAR QUE SE TRABAJA CON REQUEST
+
+    if (!Auth::attempt($request->only('email', 'password'))) {
+
+        return response()->json(['message' => 'Unautorized', 'code' => 401]);
+    }
+    $user = User::where('email', $request->email)->firstOrFail(); //TRAE EL USUARIO DE  LA BD
+
+    $token = $user->createToken('auth_token')->plainTextToken;// CREA TOKEN CADA VEZ QUE SE LOGUEA
+    
+    return response()->json(['message' => 'Hi' . $user->name, 'accessToken' => $token, 'user' => $user]);
+    
+   } 
 }
